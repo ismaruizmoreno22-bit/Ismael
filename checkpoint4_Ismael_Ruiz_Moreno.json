@@ -1,0 +1,516 @@
+{
+  "name": "checkpoint4_Ismael_Ruiz_Moreno",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -448,
+        144
+      ],
+      "id": "c23676bb-3598-4463-91df-fbc01da58b5f",
+      "name": "Correo de soporte recibido",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "2iiFZsoRChQQH0Gl",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d81d98de-5785-4bcb-b808-c57c7cc08b13",
+              "leftValue": "={{ $json.Subject }}",
+              "rightValue": "Auto-reply",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "f5609a55-556d-4193-8fec-51f4723f9ffe",
+              "leftValue": "={{ $json.Subject }}",
+              "rightValue": "Automatic reply",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "e6cf876e-7cd6-450a-88f3-1e9170332d1a",
+              "leftValue": "={{ $json.Subject }}",
+              "rightValue": "Out of office",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "81187835-16ea-4ff8-b7ba-ff476c5c09c0",
+              "leftValue": "={{ $json.Subject }}",
+              "rightValue": "Undeliverable",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "cf2eee21-47d4-44af-8c07-5d77c99d12a1",
+              "leftValue": "={{ $json.From }}",
+              "rightValue": "noreply",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -224,
+        144
+      ],
+      "id": "eb2b30c3-6417-40c3-b5c1-f49c3bb315bb",
+      "name": "Es auto-reply?"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1cd6e2cd-b96e-4303-a0ab-9417d1082a2f",
+      "name": "Descartar (corta bucle)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e69b7ea2-6812-4294-8837-606f7e337ab1",
+              "name": "=remitente_email",
+              "value": "=={{ ($json.From || '').match(/<(.+?)>/) ? $json.From.match(/<(.+?)>/)[1] : $json.From }}",
+              "type": "string"
+            },
+            {
+              "id": "cbb18d44-0384-4e3a-adfb-e0a5c18449cd",
+              "name": "asunto",
+              "value": "=={{ $json.Subject || 'Consulta de soporte' }}",
+              "type": "string"
+            },
+            {
+              "id": "58f58149-db6d-4eb3-8561-1060b07fd908",
+              "name": "cuerpo",
+              "value": "=={{ $json.snippet || 'El cliente envió un correo sin contenido.' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        272
+      ],
+      "id": "56ec3a8e-5d4a-4a1b-9823-20a7af0c3197",
+      "name": "Extraer datos del correo"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "search",
+        "filterGroupsUi": {
+          "filterGroupsValues": [
+            {
+              "filtersUi": {
+                "filterValues": [
+                  {
+                    "propertyName": "email|string",
+                    "value": "={{ $json.remitente_email }}"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.1,
+      "position": [
+        224,
+        272
+      ],
+      "id": "36cb04ed-8f8e-4bf0-8a80-b7b29fc20001",
+      "name": "Buscar contacto (lookup)",
+      "alwaysOutputData": true,
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "XFCTYIT5IXx608jv",
+          "name": "HubSpot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bfea1e51-675f-4042-9973-977f669c1b7e",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        272
+      ],
+      "id": "cd85f182-5446-4f41-b018-3dc191a88373",
+      "name": "Contacto ya existe?"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "email": "ismaruizmoreno22@gmail.com",
+        "additionalFields": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.1,
+      "position": [
+        672,
+        384
+      ],
+      "id": "b59dca6a-4e04-46d5-baf7-1421f0825477",
+      "name": "Crear contacto",
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "XFCTYIT5IXx608jv",
+          "name": "HubSpot account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        880,
+        272
+      ],
+      "id": "0119f21f-1775-439d-a1d7-26360745a2e9",
+      "name": "Unir contacto"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Extraer datos del correo').item.json.cuerpo }}",
+        "options": {
+          "systemMessage": "Sos un asistente de soporte al cliente de una tienda e-commerce. Recibis el cuerpo de un correo de un cliente y redactas una respuesta profesional, cordial y breve.\n\nReglas:\n- Responde solo lo que puedas resolver con la informacion del correo. No inventes datos de pedidos, envios ni reembolsos.\n- Si falta informacion o el caso excede el soporte estandar (reclamo grave, pedido de reembolso), redacta una respuesta que indique que el caso pasa a un agente humano.\n- No prometas plazos ni compensaciones concretas.\n- Tono: claro, empatico, sin tecnicismos. Firma como 'Equipo de Soporte'.\n- Devolves unicamente el texto de la respuesta, listo para revisar. Sin asunto, sin encabezados.",
+          "maxIterations": 5
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1104,
+        272
+      ],
+      "id": "3b386dd8-9513-4356-9d51-5a64d0abd3bd",
+      "name": "Redactar respuesta IA"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        480
+      ],
+      "id": "b3a5a6f5-1f60-4e4e-be2c-88eb683e29cd",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "h7b1o0rLPV5MdT8i",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "=Re: {{ $('Extraer datos del correo').item.json.asunto }}",
+        "message": "={{ $json.output }}",
+        "options": {
+          "sendTo": "={{ $('Extraer datos del correo').item.json.remitente_email }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1440,
+        272
+      ],
+      "id": "9c28fbc6-0912-40ba-8269-a034fcb1f591",
+      "name": "Crear borrador (revision humana)",
+      "webhookId": "1f6ad790-0395-4da1-b37c-a56c31433cc1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "2iiFZsoRChQQH0Gl",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f018ec3c-97ff-4cdb-8bee-9ee2ba4891c0",
+              "name": "slack_text",
+              "value": "=Nuevo caso de soporte\nDe: {{ $('Extraer datos del correo').item.json.remitente_email }}\nAsunto: {{ $('Extraer datos del correo').item.json.asunto }}\nBorrador generado en Gmail, pendiente de revision y envio.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1808,
+        256
+      ],
+      "id": "4ce31208-9ff7-4989-816c-6531ec6d9ea4",
+      "name": "Limpiar payload"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BMZ6V8QJV",
+          "mode": "list",
+          "cachedResultName": "all-isma"
+        },
+        "text": "={{ $json.slack_text }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        2160,
+        272
+      ],
+      "id": "ef402857-24ab-4f26-83d7-23aa308e9d1a",
+      "name": "Avisar al equipo (Slack)",
+      "webhookId": "5e69487a-2e9a-4978-ab5b-371b59057e9c",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "7lRS8lmuaBfVkbfM",
+          "name": "Slack account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Correo de soporte recibido": {
+      "main": [
+        [
+          {
+            "node": "Es auto-reply?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Es auto-reply?": {
+      "main": [
+        [
+          {
+            "node": "Descartar (corta bucle)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extraer datos del correo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer datos del correo": {
+      "main": [
+        [
+          {
+            "node": "Buscar contacto (lookup)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar contacto (lookup)": {
+      "main": [
+        [
+          {
+            "node": "Contacto ya existe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contacto ya existe?": {
+      "main": [
+        [
+          {
+            "node": "Unir contacto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Crear contacto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear contacto": {
+      "main": [
+        [
+          {
+            "node": "Unir contacto",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Unir contacto": {
+      "main": [
+        [
+          {
+            "node": "Redactar respuesta IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Redactar respuesta IA",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redactar respuesta IA": {
+      "main": [
+        [
+          {
+            "node": "Crear borrador (revision humana)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear borrador (revision humana)": {
+      "main": [
+        [
+          {
+            "node": "Limpiar payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpiar payload": {
+      "main": [
+        [
+          {
+            "node": "Avisar al equipo (Slack)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "f8ce7f37-c4c8-4cbf-9dd7-9a61052b4393",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "336a33bf5f9a6e8529b86446e81892cfafbb5d883598b5bb6495a7f21b337bc5"
+  },
+  "nodeGroups": [],
+  "id": "xmikfA5nbMVVhYff",
+  "tags": []
+}
